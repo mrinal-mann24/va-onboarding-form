@@ -298,48 +298,137 @@ select.uinput {
 .search::placeholder { color: var(--muted); }
 .search:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(22,22,26,0.06); }
 
-.clientList { display: flex; flex-direction: column; gap: 12px; }
-.clientCard {
+/* ---------- folder grid (Drive style) ---------- */
+.folderGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.folder {
+  position: relative;
   background: var(--card);
   border: 1px solid var(--hairline);
   border-radius: 14px;
-  padding: 20px 22px;
-  transition: border-color .15s, box-shadow .15s;
+  padding: 18px 18px 16px;
+  cursor: default;
+  transition: border-color .15s, box-shadow .15s, transform .12s;
 }
-.clientCard:hover { border-color: var(--line); box-shadow: 0 12px 28px -24px rgba(20,20,26,0.30); }
-.clientHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.clientName { font-size: 17px; font-weight: 600; }
-.clientLegal { display: block; color: var(--stone); font-size: 13px; margin-top: 2px; }
-
-.badge {
-  font-size: 11px; font-weight: 600;
-  padding: 3px 10px; border-radius: 20px;
-  border: 1px solid var(--hairline); color: var(--stone);
-  white-space: nowrap;
+.folder:hover {
+  border-color: var(--line);
+  box-shadow: 0 16px 34px -26px rgba(20,20,26,0.40);
+  transform: translateY(-2px);
 }
-.badge--active { color: #2f7d4f; border-color: #cfe6d8; background: #f1f9f4; }
-.badge--paused { color: #8a6d1f; border-color: #ece0c2; background: #faf6ec; }
-.badge--inactive { color: var(--stone); }
-
-.metaRow { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
-.meta { font-size: 13px; color: var(--stone); }
-
-.contactList { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.contactPill {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: #f5f5f3;
+/* the little tab that reads as a folder */
+.folderTab {
+  position: absolute;
+  top: -6px; left: 20px;
+  width: 46px; height: 10px;
+  background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 9px;
-  padding: 6px 11px;
-  font-size: 13px;
+  border-bottom: none;
+  border-radius: 7px 7px 0 0;
 }
-.contactPill .num { font-weight: 600; color: var(--ink); }
-.contactPill .who { color: var(--stone); }
-.primaryTag {
-  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-  color: #2f7d4f; background: #f1f9f4; border: 1px solid #cfe6d8;
-  border-radius: 5px; padding: 1px 5px;
+.folderBody { display: flex; align-items: center; gap: 13px; }
+.folderIcon {
+  flex: none;
+  color: #c9c9c4;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .15s;
 }
+.folder:hover .folderIcon { color: var(--ink); }
+.folderInfo { min-width: 0; flex: 1; }
+.folderName {
+  font-size: 15px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.folderMeta {
+  font-size: 12.5px; color: var(--stone); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.statusDot {
+  flex: none;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--muted);
+  align-self: flex-start; margin-top: 4px;
+}
+.statusDot--active { background: #3da06a; }
+.statusDot--paused { background: #d6a93f; }
+.statusDot--inactive { background: #c2c2c8; }
+
+/* hover action bar */
+.folderActions {
+  display: flex; gap: 8px;
+  margin-top: 14px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .15s, transform .15s;
+  pointer-events: none;
+}
+.folder:hover .folderActions,
+.folder:focus-within .folderActions {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.folderBtn {
+  flex: 1;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  color: var(--ink);
+  background: #f3f3f1;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, opacity .15s;
+}
+.folderBtn:hover:not(:disabled) { background: #ececea; border-color: var(--line); }
+.folderBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.folderBtn--primary {
+  color: #fff; background: var(--ink); border-color: var(--ink);
+}
+.folderBtn--primary:hover:not(:disabled) { background: #000; }
+
+/* ---------- edit modal ---------- */
+.modalOverlay {
+  position: fixed; inset: 0;
+  background: rgba(20,20,26,0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 48px 20px;
+  overflow-y: auto;
+  z-index: 50;
+}
+.modalCard {
+  width: 100%; max-width: 720px;
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  box-shadow: 0 30px 60px -28px rgba(20,20,26,0.45);
+  animation: modalIn .16s ease-out;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modalHead {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--hairline);
+}
+.modalTitle {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400; font-size: 26px; line-height: 1.1; letter-spacing: -0.01em;
+  margin-top: 4px;
+}
+.modalClose {
+  flex: none;
+  border: none; background: transparent; color: var(--stone);
+  font-size: 15px; cursor: pointer; padding: 8px; border-radius: 8px;
+  transition: color .15s, background .15s;
+}
+.modalClose:hover { color: var(--ink); background: #eeeeec; }
+.modalBody { padding: 24px 28px 28px; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
@@ -358,4 +447,12 @@ select.uinput {
   .navlink, .navBtn { padding: 7px 9px; font-size: 13px; }
   .intro--row { flex-direction: column; align-items: stretch; }
   .title { font-size: 32px; }
+  .modalOverlay { padding: 16px 12px; }
+  .modalHead { padding: 18px 18px 14px; }
+  .modalBody { padding: 18px; }
+}
+
+/* Touch devices have no hover — always show folder actions. */
+@media (hover: none) {
+  .folderActions { opacity: 1; transform: none; pointer-events: auto; }
 }
