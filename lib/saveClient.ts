@@ -4,8 +4,31 @@ import type { ClientValues, ContactValues } from '@/app/ClientForm'
 // Shared save logic for both the Add page and the Edit modal.
 // Returns an error message string on failure, or null on success.
 
+// Empty text -> null; empty number -> null (never "" or 0); empty date -> null.
+const textOrNull = (v: string) => (v.trim() === '' ? null : v.trim())
+const numOrNull = (v: string) => (v.trim() === '' ? null : Number(v))
+const dateOrNull = (v: string) => (v.trim() === '' ? null : v)
+
 function clientPayload(client: ClientValues) {
-  return { ...client, onboarding_date: client.onboarding_date || null }
+  return {
+    client_name: client.client_name.trim(),
+    legal_name: textOrNull(client.legal_name),
+    gstin: textOrNull(client.gstin),
+    pan: textOrNull(client.pan),
+    entity_type: textOrNull(client.entity_type),
+    industry: textOrNull(client.industry),
+    city: textOrNull(client.city),
+    state: textOrNull(client.state),
+    onboarding_date: dateOrNull(client.onboarding_date),
+    status: client.status || 'Active',
+    assigned_va: textOrNull(client.assigned_va),
+    email: textOrNull(client.email),
+    hubspot_deal_id: textOrNull(client.hubspot_deal_id),
+    deal_stage: textOrNull(client.deal_stage),
+    amount_paid: numOrNull(client.amount_paid),
+    ot_amount: numOrNull(client.ot_amount),
+    ot_payment_date: dateOrNull(client.ot_payment_date),
+  }
 }
 
 async function syncSheet(

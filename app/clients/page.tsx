@@ -28,11 +28,18 @@ type Client = {
   onboarding_date: string | null
   status: string | null
   assigned_va: string | null
+  email: string | null
+  hubspot_deal_id: string | null
+  deal_stage: string | null
+  amount_paid: number | null
+  ot_amount: number | null
+  ot_payment_date: string | null
   client_contacts: Contact[]
 }
 
 const SELECT =
   'client_id, client_name, legal_name, gstin, pan, entity_type, industry, city, state, onboarding_date, status, assigned_va, ' +
+  'email, hubspot_deal_id, deal_stage, amount_paid, ot_amount, ot_payment_date, ' +
   'client_contacts(contact_id, whatsapp_number, contact_name, role, is_primary)'
 
 export default function ClientsPage() {
@@ -163,6 +170,12 @@ function EditModal({
     onboarding_date: client.onboarding_date ?? '',
     status: client.status ?? 'Active',
     assigned_va: client.assigned_va ?? '',
+    email: client.email ?? '',
+    hubspot_deal_id: client.hubspot_deal_id ?? '',
+    deal_stage: client.deal_stage ?? '',
+    amount_paid: client.amount_paid != null ? String(client.amount_paid) : '',
+    ot_amount: client.ot_amount != null ? String(client.ot_amount) : '',
+    ot_payment_date: client.ot_payment_date ?? '',
   }
 
   const initialContacts: ContactValues[] = (client.client_contacts ?? []).map(ct => ({

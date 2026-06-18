@@ -5,6 +5,10 @@ import { useState } from 'react'
 export const VA_NAMES = ['Vishrutha', 'Harsh', 'Abhishek', 'Jeffrey', 'Eshita', 'Mehak']
 export const ENTITY_TYPES = ['Pvt Ltd', 'LLP', 'Proprietorship', 'Partnership']
 export const ROLES = ['Owner', 'Accountant', 'Partner', 'Staff']
+export const DEAL_STAGES = [
+  'Payment Done', 'Renewal Done', 'Onboarded',
+  'Ready for Renewal', 'Closed lost', 'Churned',
+]
 
 export type ContactValues = {
   contact_id?: string // present when editing an existing contact
@@ -14,6 +18,8 @@ export type ContactValues = {
   is_primary: boolean
 }
 
+// All values are held as strings in form state (controlled inputs). The save
+// layer (clientPayload) converts amounts/dates to numeric/date/null on submit.
 export type ClientValues = {
   client_name: string
   legal_name: string
@@ -26,12 +32,20 @@ export type ClientValues = {
   onboarding_date: string
   status: string
   assigned_va: string
+  email: string
+  hubspot_deal_id: string
+  deal_stage: string
+  amount_paid: string
+  ot_amount: string
+  ot_payment_date: string
 }
 
 export const emptyClient: ClientValues = {
   client_name: '', legal_name: '', gstin: '', pan: '',
   entity_type: '', industry: '', city: '', state: '',
   onboarding_date: '', status: 'Active', assigned_va: '',
+  email: '', hubspot_deal_id: '',
+  deal_stage: '', amount_paid: '', ot_amount: '', ot_payment_date: '',
 }
 
 export const emptyContact = (primary = false): ContactValues => ({
@@ -80,9 +94,29 @@ export default function ClientForm({
     setContacts(contacts.filter((_, idx) => idx !== i))
   }
 
+  function validate(): string | null {
+    if (!client.client_name.trim()) return 'Client name is required.'
+    if (client.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client.email.trim()))
+      return 'Please enter a valid email address.'
+    for (const [val, label] of [
+      [client.amount_paid, 'Amount paid'],
+      [client.ot_amount, 'One-time amount'],
+    ] as const) {
+      if (val.trim() !== '') {
+        const n = Number(val)
+        if (Number.isNaN(n)) return `${label} must be a number.`
+        if (n < 0) return `${label} cannot be negative.`
+      }
+    }
+    if (client.ot_payment_date && Number.isNaN(Date.parse(client.ot_payment_date)))
+      return 'One-time payment date is invalid.'
+    return null
+  }
+
   async function handleSave() {
-    if (!client.client_name) {
-      setMessage({ type: 'err', text: 'Client name is required.' })
+    const validationError = validate()
+    if (validationError) {
+      setMessage({ type: 'err', text: validationError })
       return
     }
     setSaving(true)
@@ -95,7 +129,14 @@ export default function ClientForm({
       return
     }
 
-    setMessage({ type: 'ok', text: `${client.client_name} has been saved.` })
+    // Summarise the billing/stage fields in the confirmation when present.
+    const parts: string[] = []
+    if (client.deal_stage) parts.push(client.deal_stage)
+    if (client.amount_paid.trim()) parts.push(`₹${Number(client.amount_paid)} recurring`)
+    if (client.ot_amount.trim()) parts.push(`₹${Number(client.ot_amount)} one-time`)
+    if (client.ot_payment_date) parts.push(`OT on ${client.ot_payment_date}`)
+    const summary = parts.length ? ` (${parts.join(' · ')})` : ''
+    setMessage({ type: 'ok', text: `${client.client_name} has been saved.${summary}` })
     setSaving(false)
     if (resetOnSuccess) {
       setClient({ ...emptyClient })
@@ -149,6 +190,36 @@ export default function ClientForm({
             <option value="">Select VA</option>
             {VA_NAMES.map(x => <option key={x} value={x}>{x}</option>)}
           </select>
+        </Field>
+        <Field label="Email">
+          <input type="email" className="uinput" value={client.email} onChange={e => updateClient('email', e.target.value)} placeholder="name@company.com" />
+        </Field>
+        <Field label="HubSpot deal ID">
+          <input className="uinput" value={client.hubspot_deal_id} onChange={e => updateClient('hubspot_deal_id', e.target.value)} placeholder="Optional" />
+        </Field>
+      </div>
+
+      <div className="sectionGap" />
+
+      <SectionLabel>Billing &amp; Stage</SectionLabel>
+
+      <div className="grid">
+        <Field label="Deal stage">
+          <select className="uinput" value={client.deal_stage} onChange={e => updateClient('deal_stage', e.target.value)}>
+            <option value="">Select</option>
+            {DEAL_STAGES.map(x => <option key={x} value={x}>{x}</option>)}
+          </select>
+        </Field>
+        <Field label="Amount paid (₹)">
+          <input type="number" min="0" step="0.01" inputMode="decimal" className="uinput"
+            value={client.amount_paid} onChange={e => updateClient('amount_paid', e.target.value)} placeholder="Recurring fee" />
+        </Field>
+        <Field label="One-time amount (₹)">
+          <input type="number" min="0" step="0.01" inputMode="decimal" className="uinput"
+            value={client.ot_amount} onChange={e => updateClient('ot_amount', e.target.value)} placeholder="One-time payment" />
+        </Field>
+        <Field label="One-time payment date">
+          <input type="date" className="uinput" value={client.ot_payment_date} onChange={e => updateClient('ot_payment_date', e.target.value)} />
         </Field>
       </div>
 

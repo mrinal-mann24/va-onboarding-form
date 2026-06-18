@@ -31,6 +31,12 @@ type Client = {
   onboarding_date?: string | null
   status?: string
   assigned_va?: string
+  email?: string | null
+  hubspot_deal_id?: string | null
+  deal_stage?: string | null
+  amount_paid?: number | null
+  ot_amount?: number | null
+  ot_payment_date?: string | null
 }
 
 function buildRows(clientId: string, client: Client, contacts: Contact[]): SheetRow[] {
@@ -49,6 +55,12 @@ function buildRows(clientId: string, client: Client, contacts: Contact[]): Sheet
     client.onboarding_date ?? '',
     client.status ?? '',
     client.assigned_va ?? '',
+    client.email ?? '',
+    client.hubspot_deal_id ?? '',
+    client.deal_stage ?? '',
+    client.amount_paid ?? '',
+    client.ot_amount ?? '',
+    client.ot_payment_date ?? '',
   ]
   const withContacts = contacts.filter(c => c.whatsapp_number)
   return withContacts.length > 0
